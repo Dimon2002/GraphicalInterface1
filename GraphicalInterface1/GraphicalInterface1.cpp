@@ -3,7 +3,6 @@
 
 #include "framework.h"
 #include "GraphicalInterface1.h"
-
 #define MAX_LOADSTRING 100
 
 // Глобальные переменные:
@@ -163,16 +162,32 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	break;
 	case WM_MOUSEMOVE:
 	{
-		HDC hdc = GetDC(hWnd);
+		HDC hdc = GetDC(hWnd2);
+		HDC hdc1 = GetDC(hWnd1);
 		RECT clientRect;
+		RECT lol;
+		lol.left = 0;
+		lol.bottom = 0;
+		lol.top = 1;
+		lol.right = 1;
 		
 		GetClientRect(hWnd,&clientRect);
+		
+		POINT p;
+		GetCursorPos(&p);
+		ScreenToClient(hWnd, &p);
+		
+		std::wstring textone = L"X:" + to_wstring(p.x) + L" Y:" + to_wstring(p.y) + L"     ";
+		//std::wstring textone = L"X:" + to_wstring(int(LOWORD(lParam))) + L" Y:" + to_wstring(int(HIWORD(lParam))) + L"     ";
+		DrawText(hdc, textone.c_str(), wcslen(textone.c_str()), &clientRect, DT_LEFT);
+		DrawText(hdc1, textone.c_str(), wcslen(textone.c_str()), &clientRect, DT_LEFT);
+		ReleaseDC(hWnd1, hdc);
+		InvalidateRect(hWnd1, &lol, TRUE);
+		
 
-		auto text = L"Go fuck you!";
-
-		DrawText(hdc, text, wcslen(text), &clientRect, DT_CENTER);
+		/*DrawText(hdc, textone.c_str(), wcslen(textone.c_str()), &clientRect, DT_LEFT);
 		ReleaseDC(hWnd, hdc);
-
+		InvalidateRect(hWnd, &lol, TRUE);*/
 	}
 	break;
 	case WM_DESTROY:
