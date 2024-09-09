@@ -2,8 +2,9 @@
 
 #include "resource.h"
 #include <iostream>
-#include <map>
+#include "string"
 
+#define CHANGE_VIEW_STATE 1000
 using namespace std;
 
 void DrawLine(HDC, POINT, POINT);

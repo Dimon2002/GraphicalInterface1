@@ -18,6 +18,9 @@ HWND hWnd2;
 COLORREF color = RGB(255, 0, 0);
 RGBTRIPLE rgbColor = { 0 , 255 , 0 };
 
+BOOL IsSingleWindow = TRUE;
+RECT clientRect;
+
 // Отправить объявления функций, включенных в этот модуль кода:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
@@ -54,6 +57,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
+		}
+		if (msg.message == WM_HOTKEY)
+		{
+			IsSingleWindow = !IsSingleWindow;
 		}
 	}
 
@@ -102,9 +109,10 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	ShowWindow(hWnd2, nCmdShow);
 	UpdateWindow(hWnd2);
 
+	RegisterHotKey(NULL, CHANGE_VIEW_STATE, MOD_CONTROL, VK_SPACE);
+
 	return TRUE;
 }
-
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -131,22 +139,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		PAINTSTRUCT ps;
 		HDC hdc = BeginPaint(hWnd, &ps);
-		RECT rect;
 
-		GetClientRect(hWnd, &rect);
+		GetClientRect(hWnd, &clientRect);
 
-		POINT p1;
-		p1.x = rect.left;
-		p1.y = rect.top;
+		POINT p1{};
+		p1.x = clientRect.left;
+		p1.y = clientRect.top;
 
-		POINT p2;
-		p2.x = rect.right;
-		p2.y = rect.bottom;
+		POINT p2{};
+		p2.x = clientRect.right;
+		p2.y = clientRect.bottom;
 
 		DrawLine(hdc, p1, p2);
 
-		p1.y = rect.bottom;
-		p2.y = rect.top;
+		p1.y = clientRect.bottom;
+		p2.y = clientRect.top;
 
 		DrawLine(hdc, p1, p2);
 
@@ -163,16 +170,33 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	break;
 	case WM_MOUSEMOVE:
 	{
-		HDC hdc = GetDC(hWnd);
-		RECT clientRect;
-		
-		GetClientRect(hWnd,&clientRect);
+		POINT p;
 
-		auto text = L"Go fuck you!";
+		GetCursorPos(&p);
+		ScreenToClient(hWnd, &p);
 
-		DrawText(hdc, text, wcslen(text), &clientRect, DT_CENTER);
-		ReleaseDC(hWnd, hdc);
+		wstring text = L"X: " + to_wstring(p.x) + L" Y: " + to_wstring(p.y) + L"    ";
+		const wchar_t* textC = text.c_str();
 
+		if (IsSingleWindow)
+		{
+			HDC hdc = GetDC(hWnd);
+
+			DrawText(hdc, textC, wcslen(textC), &clientRect, DT_LEFT);
+
+			ReleaseDC(hWnd, hdc);
+		}
+		else
+		{
+			HDC hdc1 = GetDC(hWnd1);
+			HDC hdc2 = GetDC(hWnd2);
+
+			DrawText(hdc1, textC, wcslen(textC), &clientRect, DT_LEFT);
+			DrawText(hdc2, textC, wcslen(textC), &clientRect, DT_LEFT);
+
+			ReleaseDC(hWnd1, hdc1);
+			ReleaseDC(hWnd2, hdc2);
+		}
 	}
 	break;
 	case WM_DESTROY:
