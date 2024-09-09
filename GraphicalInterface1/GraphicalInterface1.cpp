@@ -18,6 +18,10 @@ HWND hWnd2;
 COLORREF color = RGB(255, 0, 0);
 RGBTRIPLE rgbColor = { 0 , 255 , 0 };
 
+///
+double secondAngle = 180, minuteAngle = 180, hourAngle = 180;
+UINT_PTR timer;
+///
 BOOL IsSingleWindow = TRUE;
 RECT clientRect;
 
@@ -103,6 +107,16 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 		return FALSE;
 	}
 
+	///
+	SYSTEMTIME st;
+	GetLocalTime(&st);
+	secondAngle -= st.wSecond * 6;
+	minuteAngle -= st.wMinute * 6;
+	hourAngle -= st.wHour * 30;
+
+	timer = SetTimer(hWnd1, 101, 1000, NULL);
+	///
+
 	ShowWindow(hWnd1, nCmdShow);
 	UpdateWindow(hWnd1);
 
@@ -142,22 +156,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		GetClientRect(hWnd, &clientRect);
 
-		POINT p1{};
-		p1.x = clientRect.left;
-		p1.y = clientRect.top;
-
-		POINT p2{};
-		p2.x = clientRect.right;
-		p2.y = clientRect.bottom;
-
-		DrawLine(hdc, p1, p2);
-
-		p1.y = clientRect.bottom;
-		p2.y = clientRect.top;
-
-		DrawLine(hdc, p1, p2);
+		//DrawCross(hdc);
+		DrawClock(hdc);
 
 		EndPaint(hWnd, &ps);
+	}
+	break;
+	case WM_TIMER:
+	{
+		///
+		
+		///
 	}
 	break;
 	case WM_LBUTTONDOWN:
@@ -199,6 +208,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 	}
 	break;
+	case WM_QUIT:
+		KillTimer(hWnd, 101);
+		break;
 	case WM_DESTROY:
 
 		if (hWnd == hWnd2)
@@ -214,13 +226,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		if (hWnd1 == nullptr and hWnd2 == nullptr)
 		{
+			UnregisterHotKey(NULL, CHANGE_VIEW_STATE);
+
 			PostQuitMessage(0);
 		}
 		break;
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	}
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 inline void DrawLine(HDC hdc, POINT p1, POINT p2)
@@ -233,6 +247,73 @@ inline void DrawLine(HDC hdc, POINT p1, POINT p2)
 	DeleteObject(pen);
 }
 
+inline void DrawLine(HDC hdc, POINT p1, POINT p2, INT sizeLine)
+{
+	HPEN pen = CreatePen(PS_SOLID, sizeLine, color);
+
+	SelectObject(hdc, pen);
+	MoveToEx(hdc, p1.x, p1.y, NULL);
+	LineTo(hdc, p2.x, p2.y);
+	DeleteObject(pen);
+}
+
+inline void DrawCross(HDC hdc)
+{
+	POINT p1{};
+	p1.x = clientRect.left;
+	p1.y = clientRect.top;
+
+	POINT p2{};
+	p2.x = clientRect.right;
+	p2.y = clientRect.bottom;
+
+	DrawLine(hdc, p1, p2);
+
+	p1.y = clientRect.bottom;
+	p2.y = clientRect.top;
+
+	DrawLine(hdc, p1, p2);
+}
+
+inline void DrawClock(HDC hdc)
+{
+	HPEN pen = CreatePen(PS_SOLID, 5, color);
+	SelectObject(hdc, pen);
+
+	POINT center =
+	{
+		clientRect.right / 2,
+		clientRect.bottom / 2
+	};
+
+	int radius = center.y / 1.25;
+
+	Ellipse(hdc, center.x - radius, center.y + radius, center.x + radius, center.y - radius);
+
+	POINT tmpValue1 =
+	{
+		center.x + 0.7 * radius * sin(M_PI * secondAngle / 180),
+		center.y + 0.7 * radius * cos(M_PI * secondAngle / 180),
+	};
+
+	POINT tmpValue2 =
+	{
+		center.x + 0.6 * radius * sin(M_PI * minuteAngle / 180),
+		center.y + 0.6 * radius * cos(M_PI * minuteAngle / 180),
+	};
+
+	POINT tmpValue3 =
+	{
+		center.x + 0.4 * radius * sin(M_PI * hourAngle / 180),
+		center.y + 0.4 * radius * cos(M_PI * hourAngle / 180),
+	};
+
+	DrawLine(hdc, center, tmpValue1, 3);
+	DrawLine(hdc, center, tmpValue2, 4);
+	DrawLine(hdc, center, tmpValue3, 5);
+
+	DeleteObject(pen);
+}
 // Обработчик сообщений для окна "О программе".
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
