@@ -234,6 +234,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 	break;
 	case WM_QUIT:
+
+		if (hTImer) {
+			DeleteTimerQueueTimer(hTimerQueue, hTImer, NULL);
+		}
+
+		if (hTimerQueue) {
+			DeleteTimerQueue(hTimerQueue);
+		}
 		break;
 	case WM_DESTROY:
 
@@ -245,8 +253,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			UnregisterHotKey(NULL, CHANGE_VIEW_STATE);
 
 			PostQuitMessage(0);
-			DeleteTimerQueueTimer(hTimerQueue, hTImer, NULL);
-			DeleteTimerQueue(hTimerQueue);
+
 		}
 		
 		break;
