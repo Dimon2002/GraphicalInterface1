@@ -9,7 +9,7 @@
 
 using namespace std;
 
-inline void DrawLine(HDC, POINT, POINT);
-inline void DrawLine(HDC, POINT, POINT, INT);
-inline void DrawCross(HDC);
-inline void DrawClock(HDC);
+inline void DrawLine(const HDC&, const POINT&, const POINT&, const COLORREF&);
+inline void DrawLine(const HDC&, const POINT&, const POINT&, INT, const COLORREF&);
+inline void DrawCross(const HDC&, const COLORREF&);
+inline void DrawClock(const HDC&, const COLORREF&);
